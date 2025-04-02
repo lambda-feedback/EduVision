@@ -1,5 +1,7 @@
 import unittest
 from app.utility import initialize_test_connection
+from dotenv import load_dotenv
+load_dotenv()
 
 try:
     from .preview import preview_function

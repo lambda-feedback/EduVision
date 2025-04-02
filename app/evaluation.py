@@ -1,6 +1,8 @@
 import os
 from typing import Any, TypedDict
 import requests
+from dotenv import load_dotenv
+load_dotenv()
 
 class Result(TypedDict):
     is_correct: bool
@@ -36,7 +38,7 @@ def evaluation_function(response: Any, answer: Any, params: Any) -> Result:
         if len(response) != 6:
             raise Exception("Connection ID must be 6 characters long")
 
-        api_response = requests.get(f"{os.environ["API_CONNECTION"]}/{api_endpoint}{response}")
+        api_response = requests.get(f"{os.environ.get('API_CONNECTION')}/{api_endpoint}{response}")
         api_response.raise_for_status()
         api_data = api_response.json()
         is_correct = api_data == answer
