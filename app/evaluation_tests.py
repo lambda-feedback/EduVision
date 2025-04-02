@@ -1,11 +1,12 @@
-import os
 import unittest
 from app.utility import initialize_test_connection
+from dotenv import load_dotenv
+load_dotenv()
 
 try:
-    from .evaluation import Params, evaluation_function
+    from .evaluation import evaluation_function
 except ImportError:
-    from evaluation import Params, evaluation_function
+    from evaluation import evaluation_function
 
 
 

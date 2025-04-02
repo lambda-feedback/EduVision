@@ -1,6 +1,8 @@
 import os
 from typing import Any, TypedDict
 import requests
+from dotenv import load_dotenv
+load_dotenv()
 
 class Result(TypedDict):
     preview: Any
@@ -29,7 +31,7 @@ def preview_function(response: Any, params: Any) -> Result:
     try:
         api_endpoint = params.get("api_endpoint", 'resistance/')
 
-        api_response = requests.get(f"{os.environ["API_CONNECTION"]}/{api_endpoint}{response}")
+        api_response = requests.get(f"{os.environ.get('API_CONNECTION')}/{api_endpoint}{response}")
         api_response.raise_for_status()
         api_data = api_response.json()
     except requests.RequestException as e:
