@@ -7,8 +7,7 @@ For now, we have examples and API structure prepare for the EduVision Proof of C
 
 - `response` (Any): The answers provided by the student. It can be a ID of the instance, a list of IDs, a list of dictionaries, etc. to handle the response from the API.
 - `answer` (Any): The correct answers to compare against the API response.
-- `params` (Dict): Important server and endpoint information to make the API call.
-Structure of API connection. Storing ```server``` and  ```endpoint``` information.
+- `params` (Dict): Important endpoint information to make the API call to EduVision API Server. Storing ````endpoint``` information.
 
 ```
 {server}/{endpoint}{response}
@@ -40,11 +39,10 @@ Check how many resistors is recognized with its resistance value.
     "command": "eval"
   },
   "body": {
-    "response": "160929",
+    "response": "999999",
     "answer": [],
     "params": {
-      "server": "http://20.117.225.136:8000",
-      "api_endpoint": "resistors/"
+      "api_endpoint": "endpoint/"
     }
   }
 }
@@ -56,7 +54,7 @@ Check how many resistors is recognized with its resistance value.
     "command": "eval"
   },
   "body": {
-    "response": "160929",
+    "response": "999999",
     "answer": [
         {
             "resistance": 1000.0,
@@ -66,8 +64,7 @@ Check how many resistors is recognized with its resistance value.
         },
     ],
     "params": {
-      "server": "http://20.117.225.136:8000",
-      "api_endpoint": "resistors/"
+      "api_endpoint": "endpoint/"
     }
   }
 }
@@ -82,11 +79,10 @@ Check global resistance of the circuit
     "command": "eval"
   },
   "body": {
-    "response": "160929",
+    "response": "999999",
     "answer": 1000.0,
     "params": {
-      "server": "http://20.117.225.136:8000",
-      "api_endpoint": "resistance/"
+      "api_endpoint": "endpoint/"
     }
   }
 }

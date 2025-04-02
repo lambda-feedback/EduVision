@@ -1,3 +1,4 @@
+import os
 import unittest
 from app.utility import initialize_test_connection
 
@@ -30,7 +31,7 @@ class TestEvaluationFunction(unittest.TestCase):
     def test_connection(self):
         id_connection = initialize_test_connection()
 
-        response, answer, params = id_connection, 0.0, {"server": "http://20.117.225.136:8000", "api_endpoint": "resistance/"}
+        response, answer, params = id_connection, 0.0, {"api_endpoint": "resistance/"}
         result = evaluation_function(response, answer, params)
 
         self.assertEqual(result.get("is_correct"), True)
