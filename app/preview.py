@@ -1,8 +1,9 @@
 from typing import Any, TypedDict
-
+import requests
 
 class Params(TypedDict):
-    pass
+    server: str
+    api_endpoint: str
 
 
 class Result(TypedDict):
@@ -29,4 +30,12 @@ def preview_function(response: Any, params: Params) -> Result:
     The way you wish to structure you code (all in this function, or
     split into many) is entirely up to you.
     """
-    return Result(preview=response)
+    try:
+        api_response = requests.get(f"{params['server']}/{params['api_endpoint']}{response}")
+        api_response.raise_for_status()
+        api_data = api_response.json()
+    except requests.RequestException as e:
+        print(f"Error API connection: {e}")
+        api_data = None
+
+    return Result(preview=api_data)

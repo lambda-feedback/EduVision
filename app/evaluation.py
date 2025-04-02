@@ -1,8 +1,11 @@
 from typing import Any, TypedDict
-
+import requests
+# import dotenv
+# dotenv.load_dotenv()
 
 class Params(TypedDict):
-    pass
+    server: str
+    api_endpoint: str
 
 
 class Result(TypedDict):
@@ -33,4 +36,17 @@ def evaluation_function(response: Any, answer: Any, params: Params) -> Result:
     to output the evaluation response.
     """
 
-    return Result(is_correct=True)
+    try:
+
+        if len(response) != 6:
+            raise Exception("Connection ID must be 6 characters long")
+
+        api_response = requests.get(f"{params['server']}/{params['api_endpoint']}{response}")
+        api_response.raise_for_status()
+        api_data = api_response.json()
+        is_correct = api_data == answer
+    except requests.RequestException as e:
+        print(f"Error API connection: {e}")
+        is_correct = False
+
+    return Result(is_correct=is_correct)
