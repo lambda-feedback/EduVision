@@ -1,15 +1,12 @@
+import os
 from typing import Any, TypedDict
-
-
-class Params(TypedDict):
-    pass
-
+import requests
 
 class Result(TypedDict):
     is_correct: bool
 
 
-def evaluation_function(response: Any, answer: Any, params: Params) -> Result:
+def evaluation_function(response: Any, answer: Any, params: Any) -> Result:
     """
     Function used to evaluate a student response.
     ---
@@ -33,4 +30,18 @@ def evaluation_function(response: Any, answer: Any, params: Params) -> Result:
     to output the evaluation response.
     """
 
-    return Result(is_correct=True)
+    try:
+        api_endpoint = params.get("api_endpoint", 'resistance/')
+
+        if len(response) != 6:
+            raise Exception("Connection ID must be 6 characters long")
+
+        api_response = requests.get(f"{os.environ["API_CONNECTION"]}/{api_endpoint}{response}")
+        api_response.raise_for_status()
+        api_data = api_response.json()
+        is_correct = api_data == answer
+    except requests.RequestException as e:
+        print(f"Error API connection: {e}")
+        is_correct = False
+
+    return Result(is_correct=is_correct)
