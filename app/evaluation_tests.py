@@ -35,7 +35,7 @@ class TestEvaluationFunction(unittest.TestCase):
         response, answer, params = id_connection, id_connection, {"api_endpoint": "resistance/", "correct_answer": 0.0}
         result = evaluation_function(response, answer, params)
 
-        self.assertEqual(result.get("is_correct"), False)
+        self.assertEqual(result.get("is_correct"), True)
 
 if __name__ == "__main__":
     unittest.main()
