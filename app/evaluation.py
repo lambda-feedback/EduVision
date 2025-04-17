@@ -39,7 +39,12 @@ def evaluation_function(response, answer, params) -> Result:
 
         api_response = requests.get(f"{os.environ.get('API_CONNECTION')}/{api_endpoint}{response}")
         api_data = api_response.json()
-        if api_data == params.get('correct_answer', None) or api_data == 0.0 or api_data is []:
+
+        if isinstance(api_data, list) and len(api_data) > 0:
+            api_data = str(api_data)
+
+        print(api_data)
+        if api_data in [params.get('correct_answer', None), 0.0, []]:
             is_correct = True
         else:
             is_correct = False
