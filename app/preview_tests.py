@@ -30,7 +30,7 @@ class TestPreviewFunction(unittest.TestCase):
 
     def test_api_endpoint_resistance(self):
         id_connection = initialize_test_connection()
-        response, params = id_connection, {"api_endpoint": "resistance/"}
+        response, params = id_connection, {"api_endpoint": "resistance/", "correct_answer": 0.0}
         result = preview_function(response, params)
 
         self.assertIn("preview", result)
@@ -38,7 +38,7 @@ class TestPreviewFunction(unittest.TestCase):
 
     def test_api_endpoint_resistors(self):
         id_connection = initialize_test_connection()
-        response, params = id_connection, {"api_endpoint": "resistors/"}
+        response, params = id_connection, {"api_endpoint": "resistors/", "correct_answer": 0.0}
         result = preview_function(response, params)
 
         self.assertIn("preview", result)

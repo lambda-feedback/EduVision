@@ -32,7 +32,7 @@ class TestEvaluationFunction(unittest.TestCase):
     def test_connection(self):
         id_connection = initialize_test_connection()
 
-        response, answer, params = id_connection, 0.0, {"api_endpoint": "resistance/"}
+        response, answer, params = id_connection, id_connection, {"api_endpoint": "resistance/", "correct_answer": 0.0}
         result = evaluation_function(response, answer, params)
 
         self.assertEqual(result.get("is_correct"), False)
