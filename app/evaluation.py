@@ -37,7 +37,7 @@ def evaluation_function(response, answer, params) -> Result:
         if len(response) != 6:
             raise Exception("Connection ID must be 6 characters long")
 
-        api_response = requests.get(f"{os.environ.get("API_CONNECTION")}/{api_endpoint}{response}")
+        api_response = requests.get(f"{os.environ.get('API_CONNECTION')}/{api_endpoint}{response}")
         api_data = api_response.json()
         if api_data == params.get('correct_answer', None):
             is_correct = True
