@@ -44,7 +44,7 @@ def evaluation_function(response, answer, params) -> Result:
             api_data = str(api_data)
 
         print(api_data)
-        if api_data in [params.get('correct_answer', None), 0.0, []]:
+        if api_data in [params.get('correct_answer', None), -1.0, [{"resistance": -1}]]:
             is_correct = True
         else:
             is_correct = False
