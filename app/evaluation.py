@@ -2,11 +2,14 @@ import os
 from typing import TypedDict
 import requests
 from dotenv import load_dotenv
+
 load_dotenv()
+
 
 class Result(TypedDict):
     is_correct: bool
     error: int
+
 
 def evaluation_function(response, answer, params) -> Result:
     """
@@ -35,14 +38,16 @@ def evaluation_function(response, answer, params) -> Result:
     global error_output
     error_output = 0
     try:
-        api_endpoint = params.get("api_endpoint", 'resistance/')
+        api_endpoint = params.get("api_endpoint", "resistance/")
 
         if len(response) != 6:
             error_output = 1
             is_correct = False
             raise Exception("Connection ID must be 6 characters long")
 
-        api_response = requests.get(f"{os.environ.get('API_CONNECTION')}/{api_endpoint}{response}")
+        api_response = requests.post(
+            f"{os.environ.get('API_CONNECTION')}/{api_endpoint}{response}"
+        )
         api_data = api_response.json()
 
         if isinstance(api_data, list) and len(api_data) > 0:
@@ -50,19 +55,23 @@ def evaluation_function(response, answer, params) -> Result:
 
         if response == "000000":
             is_correct = True
-        elif api_data in [params.get('correct_answer', None), -1.0, [{"resistance": -1}]]:
+        elif api_data in [
+            params.get("correct_answer", None),
+            -1.0,
+            [{"resistance": -1}],
+        ]:
             if response == "resistors/":
                 len_data = len(api_data)
-                if len_data != len(params.get('correct_answer', None)):
+                if len_data != len(params.get("correct_answer", None)):
                     is_correct = False
                     error_output = 2
                 else:
-                    for i in params.get('correct_answer', None):
+                    for i in params.get("correct_answer", None):
                         if i not in api_data:
                             is_correct = False
                             error_output = 3
             elif response == "resistance/":
-                if api_data != params.get('correct_answer', None):
+                if api_data != params.get("correct_answer", None):
                     is_correct = False
                     error_output = 4
             is_correct = True
@@ -75,3 +84,4 @@ def evaluation_function(response, answer, params) -> Result:
         error_output = 6
 
     return Result(is_correct=is_correct, error=error_output)
+
