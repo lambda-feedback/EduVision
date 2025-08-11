@@ -23,7 +23,7 @@ jobs:
 
     env:
       SCHEMAS_URL: https://raw.githubusercontent.com/lambda-feedback/request-response-schemas/master/
-      API_CONNECTION: http://20.0.99.73:8000
+      API_CONNECTION: http://20.0.99.73:5000
       #API_CONNECTION: ${{secrets.API_CONNECTION}}
 
     steps:
