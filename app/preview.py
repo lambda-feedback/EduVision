@@ -2,10 +2,13 @@ import os
 from typing import Any, TypedDict
 import requests
 from dotenv import load_dotenv
+
 load_dotenv()
+
 
 class Result(TypedDict):
     preview: Any
+
 
 def preview_function(response: Any, params: Any) -> Result:
     """
@@ -22,12 +25,14 @@ def preview_function(response: Any, params: Any) -> Result:
     response schema.
     """
     try:
-        api_endpoint = params.get("api_endpoint", 'resistance/')
+        api_endpoint = params.get("api_endpoint", "resistance/")
 
         if len(response) != 6:
             raise Exception("Connection ID must be 6 characters long")
 
-        api_response = requests.get(f"{os.environ.get('API_CONNECTION')}/{api_endpoint}{response}")
+        api_response = requests.post(
+            f"{os.environ.get('API_CONNECTION')}/{api_endpoint}{response}"
+        )
         api_response.raise_for_status()
         api_data = api_response.json()
     except requests.RequestException as e:
@@ -35,3 +40,4 @@ def preview_function(response: Any, params: Any) -> Result:
         api_data = None
 
     return Result(preview=api_data)
+
