@@ -1,40 +1,47 @@
-# Evaluation Function Template Repository
+# EduVision Evaluation Function
 
-This template repository contains the boilerplate code needed in order to create an AWS Lambda function that can be written by any tutor to grade a response area in any way they like.
-
-This version is specifically for python, however the ultimate goal is to make similar boilerplate repositories in any language, allowing tutors the freedom to code in what they feel most comfortable with.
+An AWS Lambda evaluation function for the [Lambda Feedback](https://github.com/lambda-feedback) platform that grades student responses by querying the EduVision API. Built on the [BaseEvaluationFunctionLayer](https://github.com/lambda-feedback/BaseEvalutionFunctionLayer).
 
 ## Table of Contents
-- [Evaluation Function Template Repository](#evaluation-function-template-repository)
-  - [Table of Contents](#table-of-contents)
-  - [Repository Structure](#repository-structure)
-  - [Usage](#usage)
-    - [Getting Started](#getting-started)
-  - [How it works](#how-it-works)
-    - [Docker & Amazon Web Services (AWS)](#docker--amazon-web-services-aws)
-    - [Middleware Functions](#middleware-functions)
-    - [GitHub Actions](#github-actions)
-  - [Pre-requisites](#pre-requisites)
-  - [Contact](#contact)
+- [Overview](#overview)
+- [Repository Structure](#repository-structure)
+- [Usage](#usage)
+  - [Getting Started](#getting-started)
+  - [API Endpoints](#api-endpoints)
+  - [Request Format](#request-format)
+- [How it works](#how-it-works)
+  - [Docker & AWS Lambda](#docker--aws-lambda)
+  - [GitHub Actions](#github-actions)
+- [Pre-requisites](#pre-requisites)
+
+## Overview
+
+This function evaluates student responses by making API calls to the EduVision server. It compares the API's response against an expected answer to determine correctness, supporting two grading modes:
+
+- **Resistance** — checks the global resistance of a circuit (float comparison)
+- **Resistors** — checks the list of recognised resistors and their resistance values (list comparison)
 
 ## Repository Structure
 
-```bash
+```
 app/
     __init__.py
-    evaluation.py # Script containing the main evaluation_function
-    preview.py # Script containing the preview_function
-    docs.md # Documentation page for this function (required)
-    evaluation_tests.py # Unittests for the main evaluation_function
-    preview_tests.py # Unittests for the preview_function
-    requirements.txt # list of packages needed for algorithm.py
-    Dockerfile # for building whole image to deploy to AWS
+    evaluation.py       # Main evaluation function — called on "eval" command
+    preview.py          # Preview function — called on "preview" command
+    utility.py          # Shared helper (initialize_test_connection)
+    evaluation_tests.py # Unit tests for the evaluation function
+    preview_tests.py    # Unit tests for the preview function
+    requirements.txt    # Python dependencies
+    Dockerfile          # Container image for AWS Lambda deployment
+    docs/
+        user.md         # End-user documentation (served via "docs" command)
+        dev.md          # Developer documentation
 
 .github/
     workflows/
-        test-and-deploy.yml # Testing and deployment pipeline
+        test-and-deploy.yml  # CI/CD pipeline
 
-config.json # Specify the name of the evaluation function in this file
+config.json  # Evaluation function name ("eduVision")
 .gitignore
 ```
 
@@ -42,56 +49,108 @@ config.json # Specify the name of the evaluation function in this file
 
 ### Getting Started
 
-1. Clone this repository
-2. Change the name of the evaluation function in `config.json`
-3. The name must be unique. To view existing grading functions, go to:
+1. Clone this repository.
+2. Set the `API_CONNECTION` environment variable to the EduVision API server URL (e.g. in a `.env` file):
+   ```
+   API_CONNECTION=http://<host>:<port>
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r app/requirements.txt
+   ```
+4. Run the tests:
+   ```bash
+   cd app && pytest -v evaluation_tests.py preview_tests.py
+   ```
+5. Push to `main` to trigger the CI/CD pipeline, which will build, test, and deploy the function to AWS Lambda.
 
-   - [Staging API Gateway Integrations](https://eu-west-2.console.aws.amazon.com/apigateway/main/develop/integrations/attach?api=c1o0u8se7b&region=eu-west-2&routes=0xsoy4q)
-   - [Production API Gateway Integrations](https://eu-west-2.console.aws.amazon.com/apigateway/main/develop/integrations/attach?api=cttolq2oph&integration=qpbgva8&region=eu-west-2&routes=0xsoy4q)
+### API Endpoints
 
-4. Merge commits into the default branch
-   - This will trigger the `test-and-deploy.yml` workflow, which will build the docker image, push it to a shared ECR repository, then call the backend `grading-function/ensure` route to build the necessary infrastructure to make the function available from the client app.
+The function proxies requests to the EduVision API. The endpoint is controlled by the `api_endpoint` param:
 
-5. You are now ready to start developing your function:
-   
-   - Edit the `app/evaluation.py` file, which ultimately gets called when the function is given the `eval` command
-   - Edit the `app/preview.py` file, which is called when the function is passed the `preview` command.
-   - Edit the `app/evaluation_tests.py` and `app/preview_tests.py` files to add tests which get run:
-       - Every time you commit to this repo, before the image is built and deployed 
-       - Whenever the `healthcheck` command is supplied to the deployed function
-   - Edit the `app/docs.md` file to reflect your changes. This file is baked into the function's image, and is made available using the `docs` command. This feature is used to display this function's documentation on our [Documentation](https://lambda-feedback.github.io/Documentation/) website once it's been hooked up!
+| Endpoint | Description | Expected answer type |
+| --- | --- | --- |
+| `resistance/` (default) | Global circuit resistance | `float` |
+| `resistors/` | List of recognised resistors | `list[dict]` |
 
----
+The student's 6-character connection ID is appended to the endpoint:
+```
+{API_CONNECTION}/{api_endpoint}{response}
+```
+
+### Request Format
+
+Requests follow the Lambda Feedback schema:
+
+```json
+{
+  "headers": { "command": "eval" },
+  "body": {
+    "response": "999999",
+    "answer": 1000.0,
+    "params": {
+      "api_endpoint": "resistance/"
+    }
+  }
+}
+```
+
+**Resistance example** — `answer` is a `float`:
+```json
+{
+  "body": {
+    "response": "999999",
+    "answer": 1000.0,
+    "params": { "api_endpoint": "resistance/" }
+  }
+}
+```
+
+**Resistors example** — `answer` is a list of dicts:
+```json
+{
+  "body": {
+    "response": "999999",
+    "answer": [
+      { "resistance": 1000.0 },
+      { "resistance": 1000.0 }
+    ],
+    "params": { "api_endpoint": "resistors/" }
+  }
+}
+```
+
+**Response** — the function returns:
+```json
+{ "is_correct": true, "error": 0 }
+```
+
+`error` codes: `0` = success, `1` = invalid connection ID length, `2`–`5` = answer mismatch variants, `6` = API connection error.
 
 ## How it works
 
-The function is built on top of a custom base layer, [BaseEvaluationFunctionLayer](https://github.com/lambda-feedback/BaseEvalutionFunctionLayer), which tools, tests and schema checking relevant to all evaluation functions.
+### Docker & AWS Lambda
 
-### Docker & Amazon Web Services (AWS)
-
-The grading scripts are hosted AWS Lambda, using containers to run a docker image of the app. Docker is a popular tool in software development that allows programs to be hosted on any machine by bundling all its requirements and dependencies into a single file called an **image**.
-
-Images are run within **containers** on AWS, which give us a lot of flexibility over what programming language and packages/libraries can be used. For more information on Docker, read this [introduction to containerisation](https://www.freecodecamp.org/news/a-beginner-friendly-introduction-to-containers-vms-and-docker-79a9e3e119b/). To learn more about AWS Lambda, click [here](https://geekflare.com/aws-lambda-for-beginners/).
-
-### Middleware Functions
-In order to run the algorithm and schema on AWS Lambda, some middleware functions have been provided to handle, validate and return the data so all you need to worry about is the evaluation script and testing.
-
-The code needed to build the image using all the middleware functions are available in the [BaseEvaluationFunctionLayer](https://github.com/lambda-feedback/BaseEvalutionFunctionLayer) repository.
+The function runs as a Docker container on AWS Lambda. On every push to `main`, GitHub Actions builds the image, pushes it to a shared ECR repository, then calls the Lambda Feedback backend to provision the necessary infrastructure.
 
 ### GitHub Actions
-Whenever a commit is made to the GitHub repository, the new code will go through a pipeline, where it will be tested for syntax errors and code coverage. The pipeline used is called **GitHub Actions** and the scripts for these can be found in `.github/workflows/`.
 
-On top of that, when starting a new evaluation function, you will have to complete a set of unit test scripts, which not only make sure your code is reliable, but also helps you to build a _specification_ for how the code should function before you start programming.
+The `.github/workflows/test-and-deploy.yml` pipeline:
 
-Once the code passes all these tests, it will then be uploaded to AWS and will be deployed and ready to go in only a few minutes.
+1. **Lint** — runs `flake8` for syntax errors.
+2. **Test** — runs `pytest` against `evaluation_tests.py` and `preview_tests.py`.
+3. **Deploy (staging)** — builds and pushes the Docker image, then registers the function with the staging environment.
+4. **Deploy (production)** — same as staging, but targets the production environment.
+
+Tests also run on every `healthcheck` command sent to the deployed function.
 
 ## Pre-requisites
-Although all programming can be done through the GitHub interface, it is recommended you do this locally on your machine. To do this, you must have installed:
 
-- Python 3.8 or higher.
+- Python 3.8+
+- Docker (for local image builds)
+- `git` CLI or GitHub Desktop
+- Access to the EduVision API server
 
-- GitHub Desktop or the `git` CLI.
+## Contact
 
-- A code editor such as Atom, VS Code, or Sublime.
-
-Copy this template over by clicking **Use this template** button found in the repository on GitHub. Save it to the `lambda-feedback` Organisation.
+For issues with the Lambda Feedback platform, see the [lambda-feedback organisation](https://github.com/lambda-feedback) on GitHub.
